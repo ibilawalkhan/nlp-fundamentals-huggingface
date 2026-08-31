@@ -1,0 +1,23 @@
+# Virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Trained models / checkpoints 
+**/bert-ner/
+**/bert-ner-final/
+**/bert-mlm-imdb-final/
+**/bert-base-uncased-finetuned-imdb/
+
+# Or more generally, ignore any folder matching common HF output patterns:
+**/*-finetuned-*/
+**/*-final/
+
+# HF cache 
+.cache/
+
+# OS junk
+.DS_Store
+Thumbs.db
