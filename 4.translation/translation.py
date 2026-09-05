@@ -47,3 +47,57 @@ tokenized_datasets = split_datasets.map(
     batched=True,
     remove_columns=split_datasets["train"].column_names,
 )
+
+from transformers import AutoModelForSeq2SeqLM, DataCollatorForSeq2Seq
+
+model = AutoModelForSeq2SeqLM.from_pretrained(model_checkpoint)
+
+data_collator = DataCollatorForSeq2Seq(tokenizer, model=model)
+
+batch = data_collator([tokenized_datasets["train"][i] for i in range(1, 3)])
+print("batch.keys::::::::", batch.keys())
+
+print("batch[labels]::::::::", batch["labels"])
+
+print("batch[decoder_input_ids]::::::::", batch["decoder_input_ids"])
+
+for i in range(1, 3):
+    print(tokenized_datasets["train"][i]["labels"])
+
+import evaluate
+
+metric = evaluate.load("sacrebleu")
+
+predictions = [
+    "This plugin lets you translate web pages between several languages automatically."
+]
+references = [
+    [
+        "This plugin allows you to automatically translate web pages between several languages."
+    ]
+]
+metric.compute(predictions=predictions, references=references)
+print("metric.compute(predictions=predictions, references=references)", metric.compute(predictions=predictions, references=references))
+
+import numpy as np
+
+def compute_metrics(eval_preds):
+    preds, labels = eval_preds
+
+    if isinstance(preds, tuple):
+        preds = preds[0]
+
+    decoded_preds = tokenizer.batch_decode(preds, skip_special_tokens=True)
+
+    # Replace -100 in the labels as we can't decode them.
+    labels = np.where(labels != -100, labels, tokenizer.pad_token_id)
+    decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+
+    decoded_preds = [pred.strip() for pred in decoded_preds]
+    decoded_labels = [[label.strip()] for label in decoded_labels]
+
+    result = metric.compute(predictions=decoded_preds, references=decoded_labels)
+
+    result = {"bleu": result["score"]}
+
+    
